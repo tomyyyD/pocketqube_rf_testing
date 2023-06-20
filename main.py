@@ -10,6 +10,7 @@ async def send_messages():
         msg = tq.peek()
         while not msg.done():
             pkt, with_ack = msg.packet()
+            print(pkt)
             if with_ack:
                 if await cubesat.radio.send_with_ack(pkt):
                     msg.ack()

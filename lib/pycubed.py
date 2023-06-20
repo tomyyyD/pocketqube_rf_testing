@@ -9,6 +9,7 @@ import storage
 import microcontroller
 import analogio
 import pycubed_rfm9x_fsk
+import pycubed_rfm9x
 import configuration.radio_configuration as rf_config
 
 
@@ -105,12 +106,18 @@ class _Satellite:
             print('[ERROR][Initializing Radio]', e)
 
         try:
-            radio = pycubed_rfm9x_fsk.RFM9x(
+            # radio = pycubed_rfm9x_fsk.RFM9x(
+            #     self.spi,
+            #     self._rf_cs,
+            #     self._rf_rst,
+            #     rf_config.FREQUENCY,
+            #     checksum=rf_config.CHECKSUM)
+            radio = pycubed_rfm9x.RFM9x(
                 self.spi,
                 self._rf_cs,
                 self._rf_rst,
-                rf_config.FREQUENCY,
-                checksum=rf_config.CHECKSUM)
+                rf_config.FREQUENCY
+            )
 
             radio.dio0 = self.radio_DIO0
 

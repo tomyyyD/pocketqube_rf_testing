@@ -75,7 +75,7 @@ def request_file(task, file):
     :type file: str"""
     file = str(file, 'utf-8')
     if file_exists(file):
-        tq.skBufferedMessage(file))
+        tq.skBufferedMessage(file)
     else:
         task.debug(f'File not found: {file}')
         tq.push(Message(9, b'File not found', with_ack=True))
@@ -198,7 +198,10 @@ HELPER FUNCTIONS
 """
 
 def _downlink_msg(data, priority=1, header=0x00, with_ack=True):
-    assert (len(data) <= radio_utils.MAX_PACKET_LEN)
+    if radio_utils.MODE == 'LoRa':
+        assert (len(data) <= radio_utils.LORA_MAX_PACKET_LEN)
+    elif radio_utils.MODE == 'fsk':
+        assert (len(data) <= radio_utils.PACKET_DATA_LEN)
     tq.push(Message(priority, data, header=header, with_ack=with_ack))
 
 def _downlink(data):

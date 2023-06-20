@@ -1,6 +1,6 @@
 from .message import Message
 from . import headers
-from . import PACKET_DATA_LEN
+from . import PACKET_DATA_LEN, LORA_PACKET_DATA_LEN, MODE
 import os
 
 class DiskBufferedMessage(Message):
@@ -14,7 +14,10 @@ class DiskBufferedMessage(Message):
     :type str: str | bytes | bytearray
     """
 
-    packet_len = PACKET_DATA_LEN
+    if MODE == "fsk":
+        packet_len = PACKET_DATA_LEN
+    elif MODE == "LoRa":
+        packet_len = LORA_PACKET_DATA_LEN
 
     def __init__(self, path):
         self.cursor = 0
