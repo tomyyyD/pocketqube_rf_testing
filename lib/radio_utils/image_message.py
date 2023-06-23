@@ -1,6 +1,6 @@
 from .message import Message
-from ..image_utils import headers
-from ..image_utils import PACKET_DATA_LEN, LORA_PACKET_DATA_LEN, MODE
+from . import headers
+from . import PACKET_DATA_LEN, LORA_PACKET_DATA_LEN, MODE
 import os
 
 class ImageMessage(Message):
@@ -40,11 +40,11 @@ class ImageMessage(Message):
             return pkt, True
         pkt = bytearray(len(payload) + 1)
         if self.msg_len <= self.cursor + self.packet_len:  # last packet
-            pkt[0] = headers.DISK_BUFFERED_END
+            pkt[0] = headers.IMAGE_START
         elif self.cursor == 0:
-            pkt[0] = headers.DISK_BUFFERED_START
+            pkt[0] = headers.IMAGE_MID
         else:
-            pkt[0] = headers.DISK_BUFFERED_MID
+            pkt[0] = headers.IMAGE_END
 
         pkt[1:] = payload
         return pkt, True

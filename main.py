@@ -5,7 +5,7 @@ from lib.radio_utils.disk_buffered_message import DiskBufferedMessage
 
 
 async def send_messages():
-    tq.push(DiskBufferedMessage("/sd/images/image_7.jpeg"))
+    tq.push(DiskBufferedMessage("/sd/images/packeted_iamge_test.jpeg"))
     while not tq.empty():
         msg = tq.peek()
         while not msg.done():
