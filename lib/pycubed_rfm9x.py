@@ -739,7 +739,7 @@ class RFM9x:
         payload = payload + data
 
         if self.checksum:
-            payload[0] += 2
+            # payload[0] += 2
             checksum = bsd_checksum(payload)
             payload = payload + checksum
 
