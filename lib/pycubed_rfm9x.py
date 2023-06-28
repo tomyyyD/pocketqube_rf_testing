@@ -719,27 +719,28 @@ class RFM9x:
         # Fill the FIFO with a packet to send.
         self._write_u8(_RH_RF95_REG_0D_FIFO_ADDR_PTR, 0x00)  # FIFO starts at 0.
         # Combine header and data to form payload
-        payload = bytearray(4)
+        payload = bytearray(5)
+        payload[0] = len(payload) + len(data)
         if destination is None:  # use attribute
-            payload[0] = self.destination
+            payload[1] = self.destination
         else:  # use kwarg
-            payload[0] = destination
+            payload[1] = destination
         if node is None:  # use attribute
-            payload[1] = self.node
+            payload[2] = self.node
         else:  # use kwarg
-            payload[1] = node
+            payload[2] = node
         if identifier is None:  # use attribute
-            payload[2] = self.identifier
+            payload[3] = self.identifier
         else:  # use kwarg
-            payload[2] = identifier
+            payload[3] = identifier
         if flags is None:  # use attribute
-            payload[3] = self.flags
+            payload[4] = self.flags
         else:  # use kwarg
-            payload[3] = flags
+            payload[4] = flags
         payload = payload + data
 
         if self.checksum:
-            # payload[0] += 2
+            payload[0] += 2
             checksum = bsd_checksum(payload)
             payload = payload + checksum
 
@@ -798,9 +799,9 @@ class RFM9x:
                 # wait for a packet from our destination
                 ack_packet = await self.receive(timeout=self.ack_wait, with_header=True)
                 if ack_packet is not None:
-                    if ack_packet[3] & _RH_FLAGS_ACK:
+                    if ack_packet[4] & _RH_FLAGS_ACK:
                         # check the ID
-                        if ack_packet[2] == self.identifier:
+                        if ack_packet[3] == self.identifier:
                             got_ack = True
                             break
             # pause before next retry -- random delay
@@ -892,15 +893,16 @@ class RFM9x:
                 else:
                     if (
                         self.node != _RH_BROADCAST_ADDRESS
-                        and packet[0] != _RH_BROADCAST_ADDRESS
-                        and packet[0] != self.node
+                        and packet[1] != _RH_BROADCAST_ADDRESS
+                        and packet[1] != self.node
                     ):
+                        print(f"node: {self.node} != {_RH_BROADCAST_ADDRESS} != {packet[1]}")
                         packet = None
                     # send ACK unless this was an ACK or a broadcast
                     elif (
                         with_ack
-                        and ((packet[3] & _RH_FLAGS_ACK) == 0)
-                        and (packet[0] != _RH_BROADCAST_ADDRESS)
+                        and ((packet[4] & _RH_FLAGS_ACK) == 0)
+                        and (packet[1] != _RH_BROADCAST_ADDRESS)
                     ):
                         # delay before sending Ack to give receiver a chance to get ready
                         if self.ack_delay is not None:
@@ -908,22 +910,22 @@ class RFM9x:
                         # send ACK packet to sender (data is b'!')
                         await self.send(
                             b"!",
-                            destination=packet[1],
-                            node=packet[0],
-                            identifier=packet[2],
-                            flags=(packet[3] | _RH_FLAGS_ACK),
+                            destination=packet[2],
+                            node=packet[1],
+                            identifier=packet[3],
+                            flags=(packet[4] | _RH_FLAGS_ACK),
                         )
                         # reject Retries if we have seen this idetifier from this source before
-                        if (self.seen_ids[packet[1]] == packet[2]) and (
-                            packet[3] & _RH_FLAGS_RETRY
+                        if (self.seen_ids[packet[2]] == packet[3]) and (
+                            packet[4] & _RH_FLAGS_RETRY
                         ):
                             packet = None
                         else:  # save the packet identifier for this source
-                            self.seen_ids[packet[1]] = packet[2]
+                            self.seen_ids[packet[2]] = packet[3]
                     if (
                         not with_header and packet is not None
                     ):  # skip the header if not wanted
-                        packet = packet[4:]
+                        packet = packet[5:]
         # Listen again if necessary and return the result packet.
         if keep_listening:
             self.listen()
